@@ -1,0 +1,2603 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner">
+  <AutoRefresh>0</AutoRefresh>
+  <DataSources>
+    <DataSource Name="ApexReporting">
+      <DataSourceReference>/Data Sources/Apex_Rpt</DataSourceReference>
+      <rd:SecurityType>DataBase</rd:SecurityType>
+      <rd:DataSourceID>6474bb71-ef35-456f-92be-09af6df37550</rd:DataSourceID>
+    </DataSource>
+  </DataSources>
+  <DataSets>
+    <DataSet Name="FacObj">
+      <Query>
+        <DataSourceName>ApexReporting</DataSourceName>
+        <CommandText>SET TRANSACTION	ISOLATION LEVEL READ COMMITTED 
+
+IF OBJECT_ID('tempdb..#t1') IS NOT NULL
+    DROP TABLE #t1;
+IF OBJECT_ID('tempdb..#t2') IS NOT NULL
+    DROP TABLE #t2;
+IF OBJECT_ID('tempdb..#t3') IS NOT NULL
+    DROP TABLE #t3;
+IF OBJECT_ID('tempdb..#t4') IS NOT NULL
+    DROP TABLE #t4;
+IF OBJECT_ID('tempdb..#t5') IS NOT NULL
+    DROP TABLE #t5;
+
+USE [APEX_RPT]
+ 
+SELECT
+	'ALL Stations' AS 'Station',
+	'' AS 'FacObjName',
+	'9999' AS 'FacObjID',
+	'9999' AS 'FacObjTypeID',
+	'9999_9999' AS 'ID_TYPE' into #t1
+
+
+SELECT 
+	CASE
+		WHEN LEFT(FacObjName, 6) = 'Line A' THEN Replace(FacObjName,'Line A MG MR', 'MR1')
+		WHEN LEFT(FacObjName, 6) = 'Line J' THEN Replace(FacObjName,'Line J MG Hybrid', 'MR2')
+		WHEN LEFT(FacObjName, 6) = 'Line G' THEN Replace(FacObjName,'Line G MG Hybrid', 'H2')
+		WHEN LEFT(FacObjName, 6) = 'Line E' THEN Replace(FacObjName,'Line E MG Hybrid', 'H1')
+		WHEN FacObjName LIKE 'Line H1 MG Hybrid%' THEN Replace(FacObjName,'Line H1 MG Hybrid', 'H1')
+		WHEN FacObjName LIKE 'Line H1 MG%' THEN Replace(FacObjName,'Line H1 MG', 'H1')
+		WHEN FacObjName LIKE 'Line H2 MG Hybrid%' THEN Replace(FacObjName,'Line H2 MG Hybrid', 'H2')
+		WHEN FacObjName LIKE 'Line H2 MG%' THEN Replace(FacObjName,'Line H2 MG', 'H2')
+		WHEN FacObjName LIKE 'Line H3 MG Hybrid%' THEN Replace(FacObjName,'Line H3 MG Hybrid', 'H3')
+		WHEN FacObjName LIKE 'Line H3 MG%' THEN Replace(FacObjName,'Line H3 MG', 'H3')
+		WHEN FacObjName LIKE 'Line H3%' THEN Replace(FacObjName,'Line H3', 'H3')
+		WHEN FacObjName LIKE 'Line MR1 MG%' THEN Replace(FacObjName,'Line MR1 MG', 'MR1')
+		WHEN FacObjName LIKE 'Line MR2 MG%' THEN Replace(FacObjName,'Line MR2 MG', 'MR2')
+		WHEN FacObjName LIKE 'Express OTW 1%' THEN Replace(FacObjName,'Express OTW 1', 'OTW')
+		WHEN LEFT(FacObjName, 11) = 'Line MR3 MG' THEN Replace(FacObjName,'Line MR3 MG', 'MR3')
+		WHEN FacObjName LIKE 'Line MR3%' THEN Replace(FacObjName,'Line MR3', 'MR3')
+		WHEN LEFT(FacObjName, 20) = 'Line D MG OTW Periph' THEN Replace(FacObjName,'Line D MG OTW', 'OTW')
+		WHEN LEFT(FacObjName, 13) = 'Line D MG OTW' THEN Replace(FacObjName,'Line D MG OTW', 'OTW')
+		WHEN LEFT(FacObjName, 9) = 'Line D MG' THEN Replace(FacObjName,'Line D MG ', 'OTW')
+		ELSE FacObjName
+	END 'Station', 
+	F.FacObjName,
+	F.FacObjID,
+	F.FacObjTypeID,
+	CAST(F.FacObjID AS VARCHAR) + '_' + CAST(F.FacObjTypeID AS VARCHAR) AS 'ID_TYPE' into #t2
+FROM FacObj F
+INNER JOIN 
+	FacObjType T ON F.FacObjTypeID = T.FacObjTypeID
+WHERE T.FacObjHierID = '10000004'
+AND NOT F.FacObjName LIKE '% GAL %'
+--ORDER BY FacObjTypeID
+
+
+
+SELECT 
+	REPLACE('ALL ' + [Name], ' Type', '') AS 'Station',
+	REPLACE(REPLACE(REPLACE('%' + [Name] + '%', ' Type', ''), ' Station', ''), 'Inspection', 'Insp') AS 'FacObjName',
+	NULL AS 'FacObjID',
+	FacObjTypeID,
+	'9999_' + CAST(FacObjTypeID AS VARCHAR) AS 'ID_TYPE' into #t3
+FROM
+	FacObjType
+WHERE FacObjHierID =  '10000004'
+
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+USE [NGTA_MDMS_Rpt]
+
+SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+
+SELECT 
+	CASE
+		WHEN  RIGHT(pe.Name, 8) = 'System01' THEN 'OTW BalloonInspectionSystem01'
+		WHEN  RIGHT(pe.Name, 8) = 'System02' THEN 'MR3 BalloonInspectionSystem02'
+		WHEN  RIGHT(pe.Name, 8) = 'System03' THEN 'MR2 BalloonInspectionSystem03'
+		WHEN  RIGHT(pe.Name, 8) = 'System04' THEN 'MR1 BalloonInspectionSystem04'
+		WHEN  RIGHT(pe.Name, 8) = 'System05' THEN 'H3 BalloonInspectionSystem05'
+		WHEN  RIGHT(pe.Name, 8) = 'System06' THEN 'H1 BalloonInspectionSystem01'
+		WHEN  RIGHT(pe.Name, 8) = 'System07' THEN 'H2 BalloonInspectionSystem01'
+		ELSE pe.Name
+	END 'Station', 
+	pe.Name,
+	MAX(pe.ProcEntID) AS 'FacObjID',
+	MAX(pe.ProcEntRevID) AS 'FacObjTypeID',
+	CAST(pe.ProcEntID AS VARCHAR) + '_' + CAST(pe.ProcEntRevID AS VARCHAR) AS 'ID_TYPE' into #t4
+	FROM [NGTA_MDMS_Rpt].[dbo].[vw_ProcessEntity] pe
+	WHERE pe.Name like 'BalloonInspectionSystem%'
+	Group by pe.Name, pe.ProcEntID, pe.ProcEntRevID
+
+
+Select 
+	Station as 'Station',
+	Name, 
+	FacObjID as 'FacObjID',
+	Max (FacObjTypeID) as 'FacObjTypeID',
+	CAST(FacObjID AS VARCHAR) + '_' + CAST( MAX(FacObjTypeID) AS VARCHAR) AS 'ID_TYPE' into #t5
+	from #t4 group by Station, name, #t4.FacObjID
+
+
+Select * from #t1 Union Select * from #t2 Union Select * from #t3 Union Select * from #t5
+
+
+IF OBJECT_ID('tempdb..#t1') IS NOT NULL
+    DROP TABLE #t1;
+IF OBJECT_ID('tempdb..#t2') IS NOT NULL
+    DROP TABLE #t2;
+IF OBJECT_ID('tempdb..#t3') IS NOT NULL
+    DROP TABLE #t3;
+IF OBJECT_ID('tempdb..#t4') IS NOT NULL
+    DROP TABLE #t4;
+IF OBJECT_ID('tempdb..#t5') IS NOT NULL
+    DROP TABLE #t5;
+---------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------</CommandText>
+        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
+      </Query>
+      <Fields>
+        <Field Name="FacObjName">
+          <DataField>FacObjName</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Station">
+          <DataField>Station</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="FacObjID">
+          <DataField>FacObjID</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+        <Field Name="FacObjTypeID">
+          <DataField>FacObjTypeID</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+        <Field Name="ID_TYPE">
+          <DataField>ID_TYPE</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="Runs">
+      <Query>
+        <DataSourceName>ApexReporting</DataSourceName>
+        <QueryParameters>
+          <QueryParameter Name="@FacID">
+            <Value>=CINT(Left(Parameters!FacObjName.Value,InStr(Parameters!FacObjName.Value, "_")-1))</Value>
+            <rd:UserDefined>true</rd:UserDefined>
+          </QueryParameter>
+          <QueryParameter Name="@RunParamNames">
+            <Value>=Parameters!RunParamNames.Value</Value>
+          </QueryParameter>
+          <QueryParameter Name="@SearchType">
+            <Value>=Parameters!SearchType.Value</Value>
+          </QueryParameter>
+          <QueryParameter Name="@FacTypeID">
+            <Value>=CInt(RIGHT(Parameters!FacObjName.Value,Len(Parameters!FacObjName.Value)-InStr(Parameters!FacObjName.Value ,"_")))</Value>
+            <rd:UserDefined>true</rd:UserDefined>
+          </QueryParameter>
+          <QueryParameter Name="@NumRuns">
+            <Value>=Parameters!NumRuns.Value</Value>
+            <rd:UserDefined>true</rd:UserDefined>
+          </QueryParameter>
+          <QueryParameter Name="@Batch">
+            <Value>=Parameters!Batch.Value</Value>
+          </QueryParameter>
+          <QueryParameter Name="@BeginDT">
+            <Value>=Parameters!BeginDT.Value</Value>
+          </QueryParameter>
+          <QueryParameter Name="@EndDT">
+            <Value>=Parameters!EndDT.Value</Value>
+          </QueryParameter>
+        </QueryParameters>
+        <CommandText>SET TRANSACTION	ISOLATION LEVEL READ COMMITTED 
+
+DECLARE @TopCycles AS INT
+SET @TopCycles = CAST(@NumRuns AS INT)
+
+DECLARE @tmpFacObjs TABLE (FacObjID INT)
+
+INSERT @tmpFacObjs
+              ( FacObjID )
+SELECT FO.FacObjID FROM vw_FactoryObject FO
+WHERE (@FacID = 9999 OR FacObjID = @FacID) AND (@FacTypeID = 9999 OR FacObjTypeID = @FacTypeID) 
+
+IF(@SearchType = 'Runs') ---RUNS
+	BEGIN
+
+		SET @TopCycles = CAST(@NumRuns AS INT)
+		
+		SELECT 
+			R.RunID, 
+			CASE
+				WHEN LEFT(R.FacObjName, 6) = 'Line A' THEN Replace(R.FacObjName,'Line A MG MR', 'MR1')
+				WHEN LEFT(R.FacObjName, 6) = 'Line J' THEN Replace(R.FacObjName,'Line J MG Hybrid', 'MR2')
+				WHEN LEFT(R.FacObjName, 6) = 'Line G' THEN Replace(R.FacObjName,'Line G MG Hybrid', 'H2')
+				WHEN LEFT(R.FacObjName, 6) = 'Line E' THEN Replace(R.FacObjName,'Line E MG Hybrid', 'H1')
+				WHEN R.FacObjName LIKE 'Line H1 MG Hybrid%' THEN Replace(R.FacObjName,'Line H1 MG Hybrid', 'H1')
+				WHEN R.FacObjName LIKE 'Line H1 MG%' THEN Replace(R.FacObjName,'Line H1 MG', 'H1')
+				WHEN R.FacObjName LIKE 'Line H2 MG Hybrid%' THEN Replace(R.FacObjName,'Line H2 MG Hybrid', 'H2')
+				WHEN R.FacObjName LIKE 'Line H2 MG%' THEN Replace(R.FacObjName,'Line H2 MG', 'H2')
+				WHEN R.FacObjName LIKE 'Line H3 MG Hybrid%' THEN Replace(R.FacObjName,'Line H3 MG Hybrid', 'H3')
+				WHEN R.FacObjName LIKE 'Line H3 MG%' THEN Replace(R.FacObjName,'Line H3 MG', 'H3')
+				WHEN R.FacObjName LIKE 'Line H3%' THEN Replace(R.FacObjName,'Line H3', 'H3')
+				WHEN R.FacObjName LIKE 'Line MR1 MG%' THEN Replace(R.FacObjName,'Line MR1 MG', 'MR1')
+				WHEN R.FacObjName LIKE 'Line MR2 MG%' THEN Replace(R.FacObjName,'Line MR2 MG', 'MR2')
+				WHEN R.FacObjName LIKE 'Express OTW 1%' THEN Replace(R.FacObjName,'Express OTW 1', 'OTW')
+				WHEN LEFT(R.FacObjName, 11) = 'Line MR3 MG' THEN Replace(R.FacObjName,'Line MR3 MG', 'MR3')
+				WHEN R.FacObjName LIKE 'Line MR3%' THEN Replace(R.FacObjName,'Line MR3', 'MR3')
+				WHEN LEFT(R.FacObjName, 13) = 'Line D MG OTW' THEN Replace(R.FacObjName,'Line D MG OTW', 'OTW')
+				WHEN LEFT(R.FacObjName, 9) = 'Line D MG' THEN Replace(R.FacObjName,'Line D MG ', 'OTW')
+				ELSE R.FacObjName
+			END AS 'FacObjName',
+			R.Batch, 
+			R.BatchSeq, 
+			R.Matl,
+			R.BeginRunDT, 
+			R.EndRunDT, 
+			RPD.RunParamName, 
+			RPD.RunParamValue
+		FROM (
+			SELECT TOP (@TopCycles)
+			R.RunID
+			FROM vw_Run R
+			WHERE R.FacObjID IN (SELECT TFO.FacObjID FROM @tmpFacObjs TFO)  
+			ORDER BY R.RunID DESC) D
+		INNER JOIN vw_Run R ON R.RunID = D.RunID 
+		LEFT OUTER JOIN vw_Run_ParameterDetail RPD ON R.RunID = RPD.RunID --AND RPD.RunParamName IN (@RunParamNames) 
+		ORDER BY R.RunID DESC
+	END
+ELSE IF (@SearchType = 'Batch') --BATCH
+	BEGIN
+		SELECT 
+			R.RunID, 
+			CASE
+				WHEN LEFT(R.FacObjName, 6) = 'Line A' THEN Replace(R.FacObjName,'Line A MG MR', 'MR1')
+				WHEN LEFT(R.FacObjName, 6) = 'Line J' THEN Replace(R.FacObjName,'Line J MG Hybrid', 'MR2')
+				WHEN LEFT(R.FacObjName, 6) = 'Line G' THEN Replace(R.FacObjName,'Line G MG Hybrid', 'H2')
+				WHEN LEFT(R.FacObjName, 6) = 'Line E' THEN Replace(R.FacObjName,'Line E MG Hybrid', 'H1')
+				WHEN R.FacObjName LIKE 'Line H1 MG Hybrid%' THEN Replace(R.FacObjName,'Line H1 MG Hybrid', 'H1')
+				WHEN R.FacObjName LIKE 'Line H1 MG%' THEN Replace(R.FacObjName,'Line H1 MG', 'H1')
+				WHEN R.FacObjName LIKE 'Line H2 MG Hybrid%' THEN Replace(R.FacObjName,'Line H2 MG Hybrid', 'H2')
+				WHEN R.FacObjName LIKE 'Line H2 MG%' THEN Replace(R.FacObjName,'Line H2 MG', 'H2')
+				WHEN R.FacObjName LIKE 'Line H3 MG Hybrid%' THEN Replace(R.FacObjName,'Line H3 MG Hybrid', 'H3')
+				WHEN R.FacObjName LIKE 'Line H3 MG%' THEN Replace(R.FacObjName,'Line H3 MG', 'H3')
+				WHEN R.FacObjName LIKE 'Line H3%' THEN Replace(R.FacObjName,'Line H3', 'H3')
+				WHEN R.FacObjName LIKE 'Line MR1 MG%' THEN Replace(R.FacObjName,'Line MR1 MG', 'MR1')
+				WHEN R.FacObjName LIKE 'Line MR2 MG%' THEN Replace(R.FacObjName,'Line MR2 MG', 'MR2')
+				WHEN R.FacObjName LIKE 'Express OTW 1%' THEN Replace(R.FacObjName,'Express OTW 1', 'OTW')
+				WHEN LEFT(R.FacObjName, 11) = 'Line MR3 MG' THEN Replace(R.FacObjName,'Line MR3 MG', 'MR3')
+				WHEN R.FacObjName LIKE 'Line MR3%' THEN Replace(R.FacObjName,'Line MR3', 'MR3')
+				WHEN LEFT(R.FacObjName, 13) = 'Line D MG OTW' THEN Replace(R.FacObjName,'Line D MG OTW', 'OTW')
+				WHEN LEFT(R.FacObjName, 9) = 'Line D MG' THEN Replace(R.FacObjName,'Line D MG ', 'OTW')
+				ELSE R.FacObjName
+			END AS 'FacObjName', 
+			R.Batch, 
+			R.BatchSeq, 
+			R.Matl,
+			R.BeginRunDT, 
+			R.EndRunDT, 
+			RPD.RunParamName, 
+			RPD.RunParamValue
+		FROM vw_Run R  
+		LEFT OUTER JOIN vw_Run_ParameterDetail RPD ON R.RunID = RPD.RunID AND RPD.RunParamName IN (@RunParamNames) 
+		WHERE R.FacObjID IN (SELECT TFO.FacObjID FROM @tmpFacObjs TFO)  
+		AND R.Batch = @Batch
+		ORDER BY R.RunID DESC
+	END
+ELSE IF (@SearchType = 'TimeRange') --TIMERANGE
+	BEGIN
+		SELECT 
+			R.RunID, 
+			CASE
+				WHEN LEFT(R.FacObjName, 6) = 'Line A' THEN Replace(R.FacObjName,'Line A MG MR', 'MR1')
+				WHEN LEFT(R.FacObjName, 6) = 'Line J' THEN Replace(R.FacObjName,'Line J MG Hybrid', 'MR2')
+				WHEN LEFT(R.FacObjName, 6) = 'Line G' THEN Replace(R.FacObjName,'Line G MG Hybrid', 'H2')
+				WHEN LEFT(R.FacObjName, 6) = 'Line E' THEN Replace(R.FacObjName,'Line E MG Hybrid', 'H1')
+				WHEN R.FacObjName LIKE 'Line H1 MG Hybrid%' THEN Replace(R.FacObjName,'Line H1 MG Hybrid', 'H1')
+				WHEN R.FacObjName LIKE 'Line H1 MG%' THEN Replace(R.FacObjName,'Line H1 MG', 'H1')
+				WHEN R.FacObjName LIKE 'Line H2 MG Hybrid%' THEN Replace(R.FacObjName,'Line H2 MG Hybrid', 'H2')
+				WHEN R.FacObjName LIKE 'Line H2 MG%' THEN Replace(R.FacObjName,'Line H2 MG', 'H2')
+				WHEN R.FacObjName LIKE 'Line H3 MG Hybrid%' THEN Replace(R.FacObjName,'Line H3 MG Hybrid', 'H3')
+				WHEN R.FacObjName LIKE 'Line H3 MG%' THEN Replace(R.FacObjName,'Line H3 MG', 'H3')
+				WHEN R.FacObjName LIKE 'Line H3%' THEN Replace(R.FacObjName,'Line H3', 'H3')
+				WHEN R.FacObjName LIKE 'Line MR1 MG%' THEN Replace(R.FacObjName,'Line MR1 MG', 'MR1')
+				WHEN R.FacObjName LIKE 'Line MR2 MG%' THEN Replace(R.FacObjName,'Line MR2 MG', 'MR2')
+				WHEN R.FacObjName LIKE 'Express OTW 1%' THEN Replace(R.FacObjName,'Express OTW 1', 'OTW')
+				WHEN LEFT(R.FacObjName, 11) = 'Line MR3 MG' THEN Replace(R.FacObjName,'Line MR3 MG', 'MR3')
+				WHEN R.FacObjName LIKE 'Line MR3%' THEN Replace(R.FacObjName,'Line MR3', 'MR3')
+				WHEN LEFT(R.FacObjName, 13) = 'Line D MG OTW' THEN Replace(R.FacObjName,'Line D MG OTW', 'OTW')
+				WHEN LEFT(R.FacObjName, 9) = 'Line D MG' THEN Replace(R.FacObjName,'Line D MG ', 'OTW')
+				ELSE R.FacObjName
+			END AS 'FacObjName', 
+			R.Batch, 
+			R.BatchSeq, 
+			R.Matl,
+			R.BeginRunDT, 
+			R.EndRunDT, 
+			RPD.RunParamName, 
+			RPD.RunParamValue
+		FROM vw_Run R 
+		LEFT OUTER JOIN vw_Run_ParameterDetail RPD ON R.RunID = RPD.RunID AND RPD.RunParamName IN (@RunParamNames) 
+		WHERE R.FacObjID IN (SELECT TFO.FacObjID FROM @tmpFacObjs TFO)  
+		AND R.BeginRunDT BETWEEN @BeginDT AND @EndDT
+		ORDER BY R.RunID DESC
+	END</CommandText>
+        <Timeout>10</Timeout>
+        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
+      </Query>
+      <Fields>
+        <Field Name="RunID">
+          <DataField>RunID</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+        <Field Name="FacObjName">
+          <DataField>FacObjName</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Batch">
+          <DataField>Batch</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="BatchSeq">
+          <DataField>BatchSeq</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+        <Field Name="Matl">
+          <DataField>Matl</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="BeginRunDT">
+          <DataField>BeginRunDT</DataField>
+          <rd:TypeName>System.DateTime</rd:TypeName>
+        </Field>
+        <Field Name="EndRunDT">
+          <DataField>EndRunDT</DataField>
+          <rd:TypeName>System.DateTime</rd:TypeName>
+        </Field>
+        <Field Name="RunParamName">
+          <DataField>RunParamName</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="RunParamValue">
+          <DataField>RunParamValue</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="RunParamTypes">
+      <Query>
+        <DataSourceName>ApexReporting</DataSourceName>
+        <QueryParameters>
+          <QueryParameter Name="@FacTypeID">
+            <Value>=CInt(RIGHT(Parameters!FacObjName.Value,Len(Parameters!FacObjName.Value)-InStr(Parameters!FacObjName.Value ,"_")))</Value>
+            <rd:UserDefined>true</rd:UserDefined>
+          </QueryParameter>
+        </QueryParameters>
+        <CommandText>SELECT
+  RPT.RunParamName
+FROM
+  vw_FactoryObject FO
+  INNER JOIN vw_RunParamType RPT
+  ON FO.FacObjTypeName = RPT.FacObjTypeName
+WHERE FO.FacObjTypeID LIKE @FacTypeID
+UNION 
+SELECT TOP(1) '' FROM vw_Run</CommandText>
+        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
+      </Query>
+      <Fields>
+        <Field Name="RunParamName">
+          <DataField>RunParamName</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="Run_MDMS">
+      <Query>
+        <DataSourceName>ApexReporting</DataSourceName>
+        <QueryParameters>
+          <QueryParameter Name="@FacID">
+            <Value>=CINT(Left(Parameters!FacObjName.Value,InStr(Parameters!FacObjName.Value, "_")-1))</Value>
+            <rd:UserDefined>true</rd:UserDefined>
+          </QueryParameter>
+          <QueryParameter Name="@SearchType">
+            <Value>=Parameters!SearchType.Value</Value>
+            <rd:UserDefined>true</rd:UserDefined>
+          </QueryParameter>
+          <QueryParameter Name="@FacTypeID">
+            <Value>=CInt(RIGHT(Parameters!FacObjName.Value,Len(Parameters!FacObjName.Value)-InStr(Parameters!FacObjName.Value ,"_")))</Value>
+            <rd:UserDefined>true</rd:UserDefined>
+          </QueryParameter>
+          <QueryParameter Name="@NumRuns">
+            <Value>=Parameters!NumRuns.Value</Value>
+            <rd:UserDefined>true</rd:UserDefined>
+          </QueryParameter>
+          <QueryParameter Name="@Batch">
+            <Value>=Parameters!Batch.Value</Value>
+            <rd:UserDefined>true</rd:UserDefined>
+          </QueryParameter>
+          <QueryParameter Name="@BeginDT">
+            <Value>=Parameters!BeginDT.Value</Value>
+            <rd:UserDefined>true</rd:UserDefined>
+          </QueryParameter>
+          <QueryParameter Name="@EndDT">
+            <Value>=Parameters!EndDT.Value</Value>
+            <rd:UserDefined>true</rd:UserDefined>
+          </QueryParameter>
+        </QueryParameters>
+        <CommandText>SET TRANSACTION	ISOLATION LEVEL READ COMMITTED 
+
+USE [NGTA_MDMS_Rpt]
+
+DECLARE @TopCycles AS INT
+SET @TopCycles = CAST(@NumRuns AS INT)
+
+DECLARE @tmpFacObjs TABLE (FacObjID INT)
+
+INSERT @tmpFacObjs
+              ( FacObjID )
+SELECT pe.ProcEntRevID FROM [dbo].[vw_ProcessEntity] pe
+WHERE (@FacID = 9999 OR ProcEntID = @FacID) AND (@FacTypeID = 9999 OR ProcEntRevID = @FacTypeID) 
+--select * from @tmpFacObjs
+IF(@SearchType = 'Runs') ---RUNS
+	BEGIN
+
+		SET @TopCycles = CAST(@NumRuns AS INT)
+		
+		SELECT 
+			R.RunID, 
+			CASE
+				WHEN  RIGHT(r.ProcEntName, 8) = 'System01' THEN 'OTW BalloonInspectionSystem01'
+				WHEN  RIGHT(r.ProcEntName, 8) = 'System02' THEN 'MR3 BalloonInspectionSystem02'
+				WHEN  RIGHT(r.ProcEntName, 8) = 'System03' THEN 'MR2 BalloonInspectionSystem03'
+				WHEN  RIGHT(r.ProcEntName, 8) = 'System04' THEN 'MR1 BalloonInspectionSystem04'
+				WHEN  RIGHT(r.ProcEntName, 8) = 'System05' THEN 'H3 BalloonInspectionSystem05'
+				WHEN  RIGHT(r.ProcEntName, 8) = 'System06' THEN 'H1 BalloonInspectionSystem06'
+				WHEN  RIGHT(r.ProcEntName, 8) = 'System07' THEN 'H2 BalloonInspectionSystem07'
+				ELSE R.ProcEntName
+			END AS 'FacObjName',
+			R.Batch, 
+			R.Matl,
+			R.BeginRunDT, 
+			R.EndRunDT, 
+			RPD.PartParam, 
+			RPD.PartParamValue
+		FROM (
+			SELECT TOP (@TopCycles)
+			R.RunID
+			FROM vw_Run R
+			WHERE R.ProcEntRevID IN (SELECT TFO.FacObjID FROM @tmpFacObjs TFO)  
+			ORDER BY R.RunID DESC) D
+		INNER JOIN vw_Run R ON R.RunID = D.RunID 
+		LEFT OUTER JOIN vw_Run_PartDetail RPD ON R.RunID = RPD.RunID 
+		ORDER BY R.RunID DESC
+	END
+ELSE IF (@SearchType = 'Batch') --BATCH
+	BEGIN
+		SELECT 
+			R.RunID, 
+			CASE
+				WHEN  RIGHT(r.ProcEntName, 8) = 'System01' THEN 'OTW BalloonInspectionSystem01'
+				WHEN  RIGHT(r.ProcEntName, 8) = 'System02' THEN 'MR3 BalloonInspectionSystem02'
+				WHEN  RIGHT(r.ProcEntName, 8) = 'System03' THEN 'MR2 BalloonInspectionSystem03'
+				WHEN  RIGHT(r.ProcEntName, 8) = 'System04' THEN 'MR1 BalloonInspectionSystem04'
+				WHEN  RIGHT(r.ProcEntName, 8) = 'System05' THEN 'H3 BalloonInspectionSystem05'
+				WHEN  RIGHT(r.ProcEntName, 8) = 'System06' THEN 'H1 BalloonInspectionSystem06'
+				WHEN  RIGHT(r.ProcEntName, 8) = 'System07' THEN 'H2 BalloonInspectionSystem07'
+				ELSE R.ProcEntName
+			END AS 'FacObjName',
+			R.Batch, 
+			R.Matl,
+			R.BeginRunDT, 
+			R.EndRunDT, 
+			RPD.PartParam, 
+			RPD.PartParamValue
+		FROM vw_Run R  
+		LEFT OUTER JOIN vw_Run_PartDetail RPD ON R.RunID = RPD.RunID 
+		WHERE R.ProcEntRevID IN (SELECT TFO.FacObjID FROM @tmpFacObjs TFO)  
+		AND R.Batch = @Batch
+		ORDER BY R.RunID DESC
+	END
+ELSE IF (@SearchType = 'TimeRange') --TIMERANGE
+	BEGIN
+		SELECT 
+			R.RunID, 
+			CASE
+				WHEN  RIGHT(r.ProcEntName, 8) = 'System01' THEN 'OTW BalloonInspectionSystem01'
+				WHEN  RIGHT(r.ProcEntName, 8) = 'System02' THEN 'MR3 BalloonInspectionSystem02'
+				WHEN  RIGHT(r.ProcEntName, 8) = 'System03' THEN 'MR2 BalloonInspectionSystem03'
+				WHEN  RIGHT(r.ProcEntName, 8) = 'System04' THEN 'MR1 BalloonInspectionSystem04'
+				WHEN  RIGHT(r.ProcEntName, 8) = 'System05' THEN 'H3 BalloonInspectionSystem05'
+				WHEN  RIGHT(r.ProcEntName, 8) = 'System06' THEN 'H1 BalloonInspectionSystem06'
+				WHEN  RIGHT(r.ProcEntName, 8) = 'System07' THEN 'H2 BalloonInspectionSystem07'
+				ELSE R.ProcEntName
+			END AS 'FacObjName',
+			R.Batch, 
+			R.Matl,
+			R.BeginRunDT, 
+			R.EndRunDT, 
+			RPD.PartParam, 
+			RPD.PartParamValue
+		FROM vw_Run R 
+		LEFT OUTER JOIN vw_Run_PartDetail RPD ON R.RunID = RPD.RunID 
+		WHERE R.ProcEntRevID IN (SELECT TFO.FacObjID FROM @tmpFacObjs TFO)  
+		AND R.BeginRunDT BETWEEN @BeginDT AND @EndDT
+		ORDER BY R.RunID DESC
+	END</CommandText>
+        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
+      </Query>
+      <Fields>
+        <Field Name="RunID">
+          <DataField>RunID</DataField>
+          <rd:UserDefined>true</rd:UserDefined>
+        </Field>
+        <Field Name="FacObjName">
+          <DataField>FacObjName</DataField>
+          <rd:UserDefined>true</rd:UserDefined>
+        </Field>
+        <Field Name="Batch">
+          <DataField>Batch</DataField>
+          <rd:UserDefined>true</rd:UserDefined>
+        </Field>
+        <Field Name="Matl">
+          <DataField>Matl</DataField>
+          <rd:UserDefined>true</rd:UserDefined>
+        </Field>
+        <Field Name="BeginRunDT">
+          <DataField>BeginRunDT</DataField>
+          <rd:UserDefined>true</rd:UserDefined>
+        </Field>
+        <Field Name="EndRunDT">
+          <DataField>EndRunDT</DataField>
+          <rd:UserDefined>true</rd:UserDefined>
+        </Field>
+        <Field Name="PartParam">
+          <DataField>PartParam</DataField>
+          <rd:UserDefined>true</rd:UserDefined>
+        </Field>
+        <Field Name="PartParamValue">
+          <DataField>PartParamValue</DataField>
+          <rd:UserDefined>true</rd:UserDefined>
+        </Field>
+      </Fields>
+    </DataSet>
+  </DataSets>
+  <ReportSections>
+    <ReportSection>
+      <Body>
+        <ReportItems>
+          <Tablix Name="Tablix5">
+            <TablixBody>
+              <TablixColumns>
+                <TablixColumn>
+                  <Width>2.53752in</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>0.9in</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>1.22916in</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>2.1125in</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>0.76667in</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>1.525in</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>1.49167in</Width>
+                </TablixColumn>
+              </TablixColumns>
+              <TablixRows>
+                <TablixRow>
+                  <Height>0.25in</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Textbox43">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>Fac Obj Name</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                    <FontSize>11pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Center</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Textbox43</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Style>Solid</Style>
+                            </Border>
+                            <TopBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Textbox44">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>Batch</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                    <FontSize>11pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Center</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Textbox44</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Style>Solid</Style>
+                            </Border>
+                            <TopBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Textbox46">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>Matl</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                    <FontSize>11pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Center</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Textbox46</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Style>Solid</Style>
+                            </Border>
+                            <TopBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Textbox48">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>Begin Run DT</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                    <FontSize>11pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Center</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Textbox48</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Style>Solid</Style>
+                            </Border>
+                            <TopBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Textbox50">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>Shift</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                    <FontSize>11pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Center</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Textbox50</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Style>Solid</Style>
+                            </Border>
+                            <TopBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Textbox52">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>Part Param</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                    <FontSize>11pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Center</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Textbox52</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Style>Solid</Style>
+                            </Border>
+                            <TopBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Textbox54">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>Part Param Value</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                    <FontSize>11pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Center</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Textbox54</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Style>Solid</Style>
+                            </Border>
+                            <TopBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                  </TablixCells>
+                </TablixRow>
+                <TablixRow>
+                  <Height>0.25in</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="FacObjName1">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!FacObjName.Value</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Center</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>FacObjName1</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Style>Solid</Style>
+                            </Border>
+                            <TopBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Batch2">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Batch.Value</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Center</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Batch2</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Style>Solid</Style>
+                            </Border>
+                            <TopBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Matl2">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Matl.Value</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Center</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Matl2</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Style>Solid</Style>
+                            </Border>
+                            <TopBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="BeginRunDT2">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!BeginRunDT.Value</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Center</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>BeginRunDT2</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Style>Solid</Style>
+                            </Border>
+                            <TopBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="EndRunDT1">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Switch(Datepart("h",Fields!BeginRunDT.Value)&lt;6, "3" ,Datepart("h",Fields!BeginRunDT.Value) &lt;14, "1" ,Datepart("h",Fields!BeginRunDT.Value)&lt;22, "2" ,True, "3")</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Center</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>EndRunDT1</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Style>Solid</Style>
+                            </Border>
+                            <TopBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="PartParam1">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!PartParam.Value</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Center</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>PartParam1</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Style>Solid</Style>
+                            </Border>
+                            <TopBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="PartParamValue1">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!PartParamValue.Value</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Center</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>PartParamValue1</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Style>Solid</Style>
+                            </Border>
+                            <TopBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                  </TablixCells>
+                </TablixRow>
+              </TablixRows>
+            </TablixBody>
+            <TablixColumnHierarchy>
+              <TablixMembers>
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+              </TablixMembers>
+            </TablixColumnHierarchy>
+            <TablixRowHierarchy>
+              <TablixMembers>
+                <TablixMember>
+                  <TablixHeader>
+                    <Size>1in</Size>
+                    <CellContents>
+                      <Textbox Name="Textbox56">
+                        <CanGrow>true</CanGrow>
+                        <KeepTogether>true</KeepTogether>
+                        <Paragraphs>
+                          <Paragraph>
+                            <TextRuns>
+                              <TextRun>
+                                <Value>Run ID</Value>
+                                <Style>
+                                  <FontFamily>Tahoma</FontFamily>
+                                  <FontSize>11pt</FontSize>
+                                  <FontWeight>Bold</FontWeight>
+                                </Style>
+                              </TextRun>
+                            </TextRuns>
+                            <Style>
+                              <TextAlign>Center</TextAlign>
+                            </Style>
+                          </Paragraph>
+                        </Paragraphs>
+                        <rd:DefaultName>Textbox56</rd:DefaultName>
+                        <Style>
+                          <Border>
+                            <Style>Solid</Style>
+                          </Border>
+                          <TopBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </TopBorder>
+                          <BottomBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </BottomBorder>
+                          <LeftBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </LeftBorder>
+                          <RightBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </RightBorder>
+                          <VerticalAlign>Middle</VerticalAlign>
+                          <PaddingLeft>2pt</PaddingLeft>
+                          <PaddingRight>2pt</PaddingRight>
+                          <PaddingTop>2pt</PaddingTop>
+                          <PaddingBottom>2pt</PaddingBottom>
+                        </Style>
+                      </Textbox>
+                    </CellContents>
+                  </TablixHeader>
+                  <TablixMembers>
+                    <TablixMember />
+                  </TablixMembers>
+                  <KeepWithGroup>After</KeepWithGroup>
+                </TablixMember>
+                <TablixMember>
+                  <Group Name="RunID">
+                    <GroupExpressions>
+                      <GroupExpression>=Fields!RunID.Value</GroupExpression>
+                    </GroupExpressions>
+                  </Group>
+                  <SortExpressions>
+                    <SortExpression>
+                      <Value>=Fields!RunID.Value</Value>
+                    </SortExpression>
+                  </SortExpressions>
+                  <TablixHeader>
+                    <Size>1in</Size>
+                    <CellContents>
+                      <Textbox Name="RunID">
+                        <CanGrow>true</CanGrow>
+                        <KeepTogether>true</KeepTogether>
+                        <Paragraphs>
+                          <Paragraph>
+                            <TextRuns>
+                              <TextRun>
+                                <Value>=Fields!RunID.Value</Value>
+                                <Style>
+                                  <FontFamily>Tahoma</FontFamily>
+                                  <FontWeight>Bold</FontWeight>
+                                </Style>
+                              </TextRun>
+                            </TextRuns>
+                            <Style>
+                              <TextAlign>Center</TextAlign>
+                            </Style>
+                          </Paragraph>
+                        </Paragraphs>
+                        <rd:DefaultName>RunID</rd:DefaultName>
+                        <Style>
+                          <Border>
+                            <Style>Solid</Style>
+                          </Border>
+                          <TopBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </TopBorder>
+                          <BottomBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </BottomBorder>
+                          <LeftBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </LeftBorder>
+                          <RightBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </RightBorder>
+                          <VerticalAlign>Middle</VerticalAlign>
+                          <PaddingLeft>2pt</PaddingLeft>
+                          <PaddingRight>2pt</PaddingRight>
+                          <PaddingTop>2pt</PaddingTop>
+                          <PaddingBottom>2pt</PaddingBottom>
+                        </Style>
+                      </Textbox>
+                    </CellContents>
+                  </TablixHeader>
+                  <TablixMembers>
+                    <TablixMember>
+                      <Group Name="Details1" />
+                      <Visibility>
+                        <Hidden>true</Hidden>
+                        <ToggleItem>RunID</ToggleItem>
+                      </Visibility>
+                    </TablixMember>
+                  </TablixMembers>
+                </TablixMember>
+              </TablixMembers>
+            </TablixRowHierarchy>
+            <DataSetName>Run_MDMS</DataSetName>
+            <Top>1.04444in</Top>
+            <Left>0.11456in</Left>
+            <Height>0.5in</Height>
+            <Width>11.56252in</Width>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+            </Style>
+          </Tablix>
+          <Textbox Name="Textbox27">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=Lookup(Parameters!FacObjName.Value, Fields!ID_TYPE.Value, Fields!Station.Value, "FacObj") &amp; Switch(Parameters!SearchType.Value = "Runs", " - Last " &amp; Parameters!NumRuns.Value &amp; " Runs", Parameters!SearchType.Value = "Batch", " - Batch " &amp; Parameters!Batch.Value &amp; " Runs", Parameters!SearchType.Value = "TimeRange", " - " &amp; Count(Fields!RunID.Value, "Runs") &amp; " Runs Between " &amp; Parameters!BeginDT.Value &amp; " to " &amp; Parameters!EndDT.Value)</Value>
+                    <Style>
+                      <FontFamily>Calibri</FontFamily>
+                      <FontSize>14pt</FontSize>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Textbox27</rd:DefaultName>
+            <Height>0.28125in</Height>
+            <Width>9.83334in</Width>
+            <ZIndex>1</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Tablix Name="Tablix4">
+            <TablixCorner>
+              <TablixCornerRows>
+                <TablixCornerRow>
+                  <TablixCornerCell>
+                    <CellContents>
+                      <Textbox Name="Textbox2">
+                        <CanGrow>true</CanGrow>
+                        <KeepTogether>true</KeepTogether>
+                        <Paragraphs>
+                          <Paragraph>
+                            <TextRuns>
+                              <TextRun>
+                                <Value>Fac Obj Name</Value>
+                                <Style>
+                                  <FontFamily>Tahoma</FontFamily>
+                                  <FontSize>11pt</FontSize>
+                                  <FontWeight>Bold</FontWeight>
+                                </Style>
+                              </TextRun>
+                            </TextRuns>
+                            <Style>
+                              <TextAlign>Center</TextAlign>
+                            </Style>
+                          </Paragraph>
+                        </Paragraphs>
+                        <rd:DefaultName>Textbox2</rd:DefaultName>
+                        <Style>
+                          <Border>
+                            <Style>Solid</Style>
+                          </Border>
+                          <TopBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </TopBorder>
+                          <BottomBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </BottomBorder>
+                          <LeftBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </LeftBorder>
+                          <RightBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </RightBorder>
+                          <VerticalAlign>Middle</VerticalAlign>
+                          <PaddingLeft>2pt</PaddingLeft>
+                          <PaddingRight>2pt</PaddingRight>
+                          <PaddingTop>2pt</PaddingTop>
+                          <PaddingBottom>2pt</PaddingBottom>
+                        </Style>
+                      </Textbox>
+                    </CellContents>
+                  </TablixCornerCell>
+                  <TablixCornerCell>
+                    <CellContents>
+                      <Textbox Name="Textbox57">
+                        <CanGrow>true</CanGrow>
+                        <KeepTogether>true</KeepTogether>
+                        <Paragraphs>
+                          <Paragraph>
+                            <TextRuns>
+                              <TextRun>
+                                <Value>Batch</Value>
+                                <Style>
+                                  <FontFamily>Tahoma</FontFamily>
+                                  <FontSize>11pt</FontSize>
+                                  <FontWeight>Bold</FontWeight>
+                                </Style>
+                              </TextRun>
+                            </TextRuns>
+                            <Style>
+                              <TextAlign>Center</TextAlign>
+                            </Style>
+                          </Paragraph>
+                        </Paragraphs>
+                        <rd:DefaultName>Textbox57</rd:DefaultName>
+                        <Style>
+                          <Border>
+                            <Style>Solid</Style>
+                          </Border>
+                          <TopBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </TopBorder>
+                          <BottomBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </BottomBorder>
+                          <LeftBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </LeftBorder>
+                          <RightBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </RightBorder>
+                          <VerticalAlign>Middle</VerticalAlign>
+                          <PaddingLeft>2pt</PaddingLeft>
+                          <PaddingRight>2pt</PaddingRight>
+                          <PaddingTop>2pt</PaddingTop>
+                          <PaddingBottom>2pt</PaddingBottom>
+                        </Style>
+                      </Textbox>
+                    </CellContents>
+                  </TablixCornerCell>
+                  <TablixCornerCell>
+                    <CellContents>
+                      <Textbox Name="Textbox59">
+                        <CanGrow>true</CanGrow>
+                        <KeepTogether>true</KeepTogether>
+                        <Paragraphs>
+                          <Paragraph>
+                            <TextRuns>
+                              <TextRun>
+                                <Value>Seq</Value>
+                                <Style>
+                                  <FontFamily>Tahoma</FontFamily>
+                                  <FontSize>11pt</FontSize>
+                                  <FontWeight>Bold</FontWeight>
+                                </Style>
+                              </TextRun>
+                            </TextRuns>
+                            <Style>
+                              <TextAlign>Center</TextAlign>
+                            </Style>
+                          </Paragraph>
+                        </Paragraphs>
+                        <rd:DefaultName>Textbox59</rd:DefaultName>
+                        <Style>
+                          <Border>
+                            <Style>Solid</Style>
+                          </Border>
+                          <TopBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </TopBorder>
+                          <BottomBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </BottomBorder>
+                          <LeftBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </LeftBorder>
+                          <RightBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </RightBorder>
+                          <VerticalAlign>Middle</VerticalAlign>
+                          <PaddingLeft>2pt</PaddingLeft>
+                          <PaddingRight>2pt</PaddingRight>
+                          <PaddingTop>2pt</PaddingTop>
+                          <PaddingBottom>2pt</PaddingBottom>
+                        </Style>
+                      </Textbox>
+                    </CellContents>
+                  </TablixCornerCell>
+                  <TablixCornerCell>
+                    <CellContents>
+                      <Textbox Name="Textbox61">
+                        <CanGrow>true</CanGrow>
+                        <KeepTogether>true</KeepTogether>
+                        <Paragraphs>
+                          <Paragraph>
+                            <TextRuns>
+                              <TextRun>
+                                <Value>Matl</Value>
+                                <Style>
+                                  <FontFamily>Tahoma</FontFamily>
+                                  <FontSize>11pt</FontSize>
+                                  <FontWeight>Bold</FontWeight>
+                                </Style>
+                              </TextRun>
+                            </TextRuns>
+                            <Style>
+                              <TextAlign>Center</TextAlign>
+                            </Style>
+                          </Paragraph>
+                        </Paragraphs>
+                        <rd:DefaultName>Textbox61</rd:DefaultName>
+                        <Style>
+                          <Border>
+                            <Style>Solid</Style>
+                          </Border>
+                          <TopBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </TopBorder>
+                          <BottomBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </BottomBorder>
+                          <LeftBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </LeftBorder>
+                          <RightBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </RightBorder>
+                          <VerticalAlign>Middle</VerticalAlign>
+                          <PaddingLeft>2pt</PaddingLeft>
+                          <PaddingRight>2pt</PaddingRight>
+                          <PaddingTop>2pt</PaddingTop>
+                          <PaddingBottom>2pt</PaddingBottom>
+                        </Style>
+                      </Textbox>
+                    </CellContents>
+                  </TablixCornerCell>
+                  <TablixCornerCell>
+                    <CellContents>
+                      <Textbox Name="Textbox63">
+                        <CanGrow>true</CanGrow>
+                        <KeepTogether>true</KeepTogether>
+                        <Paragraphs>
+                          <Paragraph>
+                            <TextRuns>
+                              <TextRun>
+                                <Value>Begin Run DT</Value>
+                                <Style>
+                                  <FontFamily>Tahoma</FontFamily>
+                                  <FontSize>11pt</FontSize>
+                                  <FontWeight>Bold</FontWeight>
+                                </Style>
+                              </TextRun>
+                            </TextRuns>
+                            <Style>
+                              <TextAlign>Center</TextAlign>
+                            </Style>
+                          </Paragraph>
+                        </Paragraphs>
+                        <rd:DefaultName>Textbox63</rd:DefaultName>
+                        <Style>
+                          <Border>
+                            <Style>Solid</Style>
+                          </Border>
+                          <TopBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </TopBorder>
+                          <BottomBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </BottomBorder>
+                          <LeftBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </LeftBorder>
+                          <RightBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </RightBorder>
+                          <VerticalAlign>Middle</VerticalAlign>
+                          <PaddingLeft>2pt</PaddingLeft>
+                          <PaddingRight>2pt</PaddingRight>
+                          <PaddingTop>2pt</PaddingTop>
+                          <PaddingBottom>2pt</PaddingBottom>
+                        </Style>
+                      </Textbox>
+                    </CellContents>
+                  </TablixCornerCell>
+                  <TablixCornerCell>
+                    <CellContents>
+                      <Textbox Name="Textbox1">
+                        <CanGrow>true</CanGrow>
+                        <KeepTogether>true</KeepTogether>
+                        <Paragraphs>
+                          <Paragraph>
+                            <TextRuns>
+                              <TextRun>
+                                <Value>Shift</Value>
+                                <Style>
+                                  <FontFamily>Tahoma</FontFamily>
+                                  <FontSize>11pt</FontSize>
+                                  <FontWeight>Bold</FontWeight>
+                                </Style>
+                              </TextRun>
+                            </TextRuns>
+                            <Style>
+                              <TextAlign>Center</TextAlign>
+                            </Style>
+                          </Paragraph>
+                        </Paragraphs>
+                        <rd:DefaultName>Textbox1</rd:DefaultName>
+                        <Style>
+                          <Border>
+                            <Style>Solid</Style>
+                          </Border>
+                          <TopBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </TopBorder>
+                          <BottomBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </BottomBorder>
+                          <LeftBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </LeftBorder>
+                          <RightBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </RightBorder>
+                          <VerticalAlign>Middle</VerticalAlign>
+                          <PaddingLeft>2pt</PaddingLeft>
+                          <PaddingRight>2pt</PaddingRight>
+                          <PaddingTop>2pt</PaddingTop>
+                          <PaddingBottom>2pt</PaddingBottom>
+                        </Style>
+                      </Textbox>
+                    </CellContents>
+                  </TablixCornerCell>
+                </TablixCornerRow>
+              </TablixCornerRows>
+            </TablixCorner>
+            <TablixBody>
+              <TablixColumns>
+                <TablixColumn>
+                  <Width>1.39583in</Width>
+                </TablixColumn>
+              </TablixColumns>
+              <TablixRows>
+                <TablixRow>
+                  <Height>0.25in</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="RunParamValue">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!RunParamValue.Value</Value>
+                                  <Style>
+                                    <FontFamily>Tahoma</FontFamily>
+                                    <FontSize>11pt</FontSize>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Center</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>RunParamValue</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Style>Solid</Style>
+                            </Border>
+                            <TopBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>Black</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </RightBorder>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                  </TablixCells>
+                </TablixRow>
+              </TablixRows>
+            </TablixBody>
+            <TablixColumnHierarchy>
+              <TablixMembers>
+                <TablixMember>
+                  <Group Name="RunParamName">
+                    <GroupExpressions>
+                      <GroupExpression>=Fields!RunParamName.Value</GroupExpression>
+                    </GroupExpressions>
+                  </Group>
+                  <SortExpressions>
+                    <SortExpression>
+                      <Value>=Fields!RunParamName.Value</Value>
+                    </SortExpression>
+                  </SortExpressions>
+                  <TablixHeader>
+                    <Size>0.25in</Size>
+                    <CellContents>
+                      <Textbox Name="RunParamName">
+                        <CanGrow>true</CanGrow>
+                        <KeepTogether>true</KeepTogether>
+                        <Paragraphs>
+                          <Paragraph>
+                            <TextRuns>
+                              <TextRun>
+                                <Value>=Fields!RunParamName.Value</Value>
+                                <Style>
+                                  <FontFamily>Tahoma</FontFamily>
+                                  <FontSize>11pt</FontSize>
+                                  <FontWeight>Bold</FontWeight>
+                                </Style>
+                              </TextRun>
+                            </TextRuns>
+                            <Style>
+                              <TextAlign>Center</TextAlign>
+                            </Style>
+                          </Paragraph>
+                        </Paragraphs>
+                        <rd:DefaultName>RunParamName</rd:DefaultName>
+                        <Style>
+                          <Border>
+                            <Style>Solid</Style>
+                          </Border>
+                          <TopBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </TopBorder>
+                          <BottomBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </BottomBorder>
+                          <LeftBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </LeftBorder>
+                          <RightBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </RightBorder>
+                          <VerticalAlign>Middle</VerticalAlign>
+                          <PaddingLeft>2pt</PaddingLeft>
+                          <PaddingRight>2pt</PaddingRight>
+                          <PaddingTop>2pt</PaddingTop>
+                          <PaddingBottom>2pt</PaddingBottom>
+                        </Style>
+                      </Textbox>
+                    </CellContents>
+                  </TablixHeader>
+                </TablixMember>
+              </TablixMembers>
+            </TablixColumnHierarchy>
+            <TablixRowHierarchy>
+              <TablixMembers>
+                <TablixMember>
+                  <Group Name="Run">
+                    <GroupExpressions>
+                      <GroupExpression>=Fields!RunID.Value</GroupExpression>
+                    </GroupExpressions>
+                  </Group>
+                  <SortExpressions>
+                    <SortExpression>
+                      <Value>=Fields!RunID.Value</Value>
+                      <Direction>Descending</Direction>
+                    </SortExpression>
+                  </SortExpressions>
+                  <TablixHeader>
+                    <Size>2.89583in</Size>
+                    <CellContents>
+                      <Textbox Name="FacObjName">
+                        <CanGrow>true</CanGrow>
+                        <KeepTogether>true</KeepTogether>
+                        <Paragraphs>
+                          <Paragraph>
+                            <TextRuns>
+                              <TextRun>
+                                <Value>=Fields!FacObjName.Value</Value>
+                                <Style>
+                                  <FontFamily>Tahoma</FontFamily>
+                                  <FontSize>11pt</FontSize>
+                                </Style>
+                              </TextRun>
+                            </TextRuns>
+                            <Style>
+                              <TextAlign>Center</TextAlign>
+                            </Style>
+                          </Paragraph>
+                        </Paragraphs>
+                        <rd:DefaultName>FacObjName</rd:DefaultName>
+                        <Style>
+                          <Border>
+                            <Style>Solid</Style>
+                          </Border>
+                          <TopBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </TopBorder>
+                          <BottomBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </BottomBorder>
+                          <LeftBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </LeftBorder>
+                          <RightBorder>
+                            <Color>Black</Color>
+                            <Style>Solid</Style>
+                            <Width>1pt</Width>
+                          </RightBorder>
+                          <VerticalAlign>Middle</VerticalAlign>
+                          <PaddingLeft>2pt</PaddingLeft>
+                          <PaddingRight>2pt</PaddingRight>
+                          <PaddingTop>2pt</PaddingTop>
+                          <PaddingBottom>2pt</PaddingBottom>
+                        </Style>
+                      </Textbox>
+                    </CellContents>
+                  </TablixHeader>
+                  <TablixMembers>
+                    <TablixMember>
+                      <TablixHeader>
+                        <Size>0.94792in</Size>
+                        <CellContents>
+                          <Textbox Name="Batch">
+                            <CanGrow>true</CanGrow>
+                            <KeepTogether>true</KeepTogether>
+                            <Paragraphs>
+                              <Paragraph>
+                                <TextRuns>
+                                  <TextRun>
+                                    <Value>=Fields!Batch.Value</Value>
+                                    <Style>
+                                      <FontFamily>Tahoma</FontFamily>
+                                      <FontSize>11pt</FontSize>
+                                    </Style>
+                                  </TextRun>
+                                </TextRuns>
+                                <Style>
+                                  <TextAlign>Center</TextAlign>
+                                </Style>
+                              </Paragraph>
+                            </Paragraphs>
+                            <rd:DefaultName>Batch</rd:DefaultName>
+                            <Style>
+                              <Border>
+                                <Style>Solid</Style>
+                              </Border>
+                              <TopBorder>
+                                <Color>Black</Color>
+                                <Style>Solid</Style>
+                                <Width>1pt</Width>
+                              </TopBorder>
+                              <BottomBorder>
+                                <Color>Black</Color>
+                                <Style>Solid</Style>
+                                <Width>1pt</Width>
+                              </BottomBorder>
+                              <LeftBorder>
+                                <Color>Black</Color>
+                                <Style>Solid</Style>
+                                <Width>1pt</Width>
+                              </LeftBorder>
+                              <RightBorder>
+                                <Color>Black</Color>
+                                <Style>Solid</Style>
+                                <Width>1pt</Width>
+                              </RightBorder>
+                              <VerticalAlign>Middle</VerticalAlign>
+                              <PaddingLeft>2pt</PaddingLeft>
+                              <PaddingRight>2pt</PaddingRight>
+                              <PaddingTop>2pt</PaddingTop>
+                              <PaddingBottom>2pt</PaddingBottom>
+                            </Style>
+                          </Textbox>
+                        </CellContents>
+                      </TablixHeader>
+                      <TablixMembers>
+                        <TablixMember>
+                          <TablixHeader>
+                            <Size>0.41666in</Size>
+                            <CellContents>
+                              <Textbox Name="BatchSeq">
+                                <CanGrow>true</CanGrow>
+                                <KeepTogether>true</KeepTogether>
+                                <Paragraphs>
+                                  <Paragraph>
+                                    <TextRuns>
+                                      <TextRun>
+                                        <Value>=Fields!BatchSeq.Value</Value>
+                                        <Style>
+                                          <FontFamily>Tahoma</FontFamily>
+                                          <FontSize>11pt</FontSize>
+                                        </Style>
+                                      </TextRun>
+                                    </TextRuns>
+                                    <Style>
+                                      <TextAlign>Center</TextAlign>
+                                    </Style>
+                                  </Paragraph>
+                                </Paragraphs>
+                                <rd:DefaultName>BatchSeq</rd:DefaultName>
+                                <Style>
+                                  <Border>
+                                    <Style>Solid</Style>
+                                  </Border>
+                                  <TopBorder>
+                                    <Color>Black</Color>
+                                    <Style>Solid</Style>
+                                    <Width>1pt</Width>
+                                  </TopBorder>
+                                  <BottomBorder>
+                                    <Color>Black</Color>
+                                    <Style>Solid</Style>
+                                    <Width>1pt</Width>
+                                  </BottomBorder>
+                                  <LeftBorder>
+                                    <Color>Black</Color>
+                                    <Style>Solid</Style>
+                                    <Width>1pt</Width>
+                                  </LeftBorder>
+                                  <RightBorder>
+                                    <Color>Black</Color>
+                                    <Style>Solid</Style>
+                                    <Width>1pt</Width>
+                                  </RightBorder>
+                                  <VerticalAlign>Middle</VerticalAlign>
+                                  <PaddingLeft>2pt</PaddingLeft>
+                                  <PaddingRight>2pt</PaddingRight>
+                                  <PaddingTop>2pt</PaddingTop>
+                                  <PaddingBottom>2pt</PaddingBottom>
+                                </Style>
+                              </Textbox>
+                            </CellContents>
+                          </TablixHeader>
+                          <TablixMembers>
+                            <TablixMember>
+                              <TablixHeader>
+                                <Size>1.39583in</Size>
+                                <CellContents>
+                                  <Textbox Name="Matl">
+                                    <CanGrow>true</CanGrow>
+                                    <KeepTogether>true</KeepTogether>
+                                    <Paragraphs>
+                                      <Paragraph>
+                                        <TextRuns>
+                                          <TextRun>
+                                            <Value>=Fields!Matl.Value</Value>
+                                            <Style>
+                                              <FontFamily>Tahoma</FontFamily>
+                                              <FontSize>11pt</FontSize>
+                                            </Style>
+                                          </TextRun>
+                                        </TextRuns>
+                                        <Style>
+                                          <TextAlign>Center</TextAlign>
+                                        </Style>
+                                      </Paragraph>
+                                    </Paragraphs>
+                                    <rd:DefaultName>Matl</rd:DefaultName>
+                                    <Style>
+                                      <Border>
+                                        <Style>Solid</Style>
+                                      </Border>
+                                      <TopBorder>
+                                        <Color>Black</Color>
+                                        <Style>Solid</Style>
+                                        <Width>1pt</Width>
+                                      </TopBorder>
+                                      <BottomBorder>
+                                        <Color>Black</Color>
+                                        <Style>Solid</Style>
+                                        <Width>1pt</Width>
+                                      </BottomBorder>
+                                      <LeftBorder>
+                                        <Color>Black</Color>
+                                        <Style>Solid</Style>
+                                        <Width>1pt</Width>
+                                      </LeftBorder>
+                                      <RightBorder>
+                                        <Color>Black</Color>
+                                        <Style>Solid</Style>
+                                        <Width>1pt</Width>
+                                      </RightBorder>
+                                      <VerticalAlign>Middle</VerticalAlign>
+                                      <PaddingLeft>2pt</PaddingLeft>
+                                      <PaddingRight>2pt</PaddingRight>
+                                      <PaddingTop>2pt</PaddingTop>
+                                      <PaddingBottom>2pt</PaddingBottom>
+                                    </Style>
+                                  </Textbox>
+                                </CellContents>
+                              </TablixHeader>
+                              <TablixMembers>
+                                <TablixMember>
+                                  <TablixHeader>
+                                    <Size>1.64583in</Size>
+                                    <CellContents>
+                                      <Textbox Name="BeginRunDT">
+                                        <CanGrow>true</CanGrow>
+                                        <KeepTogether>true</KeepTogether>
+                                        <Paragraphs>
+                                          <Paragraph>
+                                            <TextRuns>
+                                              <TextRun>
+                                                <Value>=Fields!BeginRunDT.Value</Value>
+                                                <Style>
+                                                  <FontFamily>Tahoma</FontFamily>
+                                                  <FontSize>11pt</FontSize>
+                                                </Style>
+                                              </TextRun>
+                                            </TextRuns>
+                                            <Style>
+                                              <TextAlign>Center</TextAlign>
+                                            </Style>
+                                          </Paragraph>
+                                        </Paragraphs>
+                                        <rd:DefaultName>BeginRunDT</rd:DefaultName>
+                                        <Style>
+                                          <Border>
+                                            <Style>Solid</Style>
+                                          </Border>
+                                          <TopBorder>
+                                            <Color>Black</Color>
+                                            <Style>Solid</Style>
+                                            <Width>1pt</Width>
+                                          </TopBorder>
+                                          <BottomBorder>
+                                            <Color>Black</Color>
+                                            <Style>Solid</Style>
+                                            <Width>1pt</Width>
+                                          </BottomBorder>
+                                          <LeftBorder>
+                                            <Color>Black</Color>
+                                            <Style>Solid</Style>
+                                            <Width>1pt</Width>
+                                          </LeftBorder>
+                                          <RightBorder>
+                                            <Color>Black</Color>
+                                            <Style>Solid</Style>
+                                            <Width>1pt</Width>
+                                          </RightBorder>
+                                          <VerticalAlign>Middle</VerticalAlign>
+                                          <PaddingLeft>2pt</PaddingLeft>
+                                          <PaddingRight>2pt</PaddingRight>
+                                          <PaddingTop>2pt</PaddingTop>
+                                          <PaddingBottom>2pt</PaddingBottom>
+                                        </Style>
+                                      </Textbox>
+                                    </CellContents>
+                                  </TablixHeader>
+                                  <TablixMembers>
+                                    <TablixMember>
+                                      <TablixHeader>
+                                        <Size>1in</Size>
+                                        <CellContents>
+                                          <Textbox Name="Textbox3">
+                                            <CanGrow>true</CanGrow>
+                                            <KeepTogether>true</KeepTogether>
+                                            <Paragraphs>
+                                              <Paragraph>
+                                                <TextRuns>
+                                                  <TextRun>
+                                                    <Value>=Switch(Datepart("h",Fields!BeginRunDT.Value)&lt;6, "3" ,Datepart("h",Fields!BeginRunDT.Value) &lt;14, "1" ,Datepart("h",Fields!BeginRunDT.Value)&lt;22, "2" ,True, "3")</Value>
+                                                    <Style>
+                                                      <FontFamily>Tahoma</FontFamily>
+                                                      <FontSize>11pt</FontSize>
+                                                    </Style>
+                                                  </TextRun>
+                                                </TextRuns>
+                                                <Style>
+                                                  <TextAlign>Center</TextAlign>
+                                                </Style>
+                                              </Paragraph>
+                                            </Paragraphs>
+                                            <rd:DefaultName>Textbox3</rd:DefaultName>
+                                            <Style>
+                                              <Border>
+                                                <Style>Solid</Style>
+                                              </Border>
+                                              <TopBorder>
+                                                <Color>Black</Color>
+                                                <Style>Solid</Style>
+                                                <Width>1pt</Width>
+                                              </TopBorder>
+                                              <BottomBorder>
+                                                <Color>Black</Color>
+                                                <Style>Solid</Style>
+                                                <Width>1pt</Width>
+                                              </BottomBorder>
+                                              <LeftBorder>
+                                                <Color>Black</Color>
+                                                <Style>Solid</Style>
+                                                <Width>1pt</Width>
+                                              </LeftBorder>
+                                              <RightBorder>
+                                                <Color>Black</Color>
+                                                <Style>Solid</Style>
+                                                <Width>1pt</Width>
+                                              </RightBorder>
+                                              <VerticalAlign>Middle</VerticalAlign>
+                                              <PaddingLeft>2pt</PaddingLeft>
+                                              <PaddingRight>2pt</PaddingRight>
+                                              <PaddingTop>2pt</PaddingTop>
+                                              <PaddingBottom>2pt</PaddingBottom>
+                                            </Style>
+                                          </Textbox>
+                                        </CellContents>
+                                      </TablixHeader>
+                                      <TablixMembers>
+                                        <TablixMember />
+                                      </TablixMembers>
+                                    </TablixMember>
+                                  </TablixMembers>
+                                </TablixMember>
+                              </TablixMembers>
+                            </TablixMember>
+                          </TablixMembers>
+                        </TablixMember>
+                      </TablixMembers>
+                    </TablixMember>
+                  </TablixMembers>
+                </TablixMember>
+              </TablixMembers>
+            </TablixRowHierarchy>
+            <RepeatColumnHeaders>true</RepeatColumnHeaders>
+            <KeepTogether>true</KeepTogether>
+            <DataSetName>Runs</DataSetName>
+            <Top>0.35069in</Top>
+            <Left>0.11456in</Left>
+            <Height>0.5in</Height>
+            <Width>9.6979in</Width>
+            <ZIndex>2</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+            </Style>
+          </Tablix>
+        </ReportItems>
+        <Height>1.81945in</Height>
+        <Style />
+      </Body>
+      <Width>12.10207in</Width>
+      <Page>
+        <InteractiveHeight>100in</InteractiveHeight>
+        <InteractiveWidth>8.5in</InteractiveWidth>
+        <LeftMargin>1in</LeftMargin>
+        <RightMargin>1in</RightMargin>
+        <TopMargin>1in</TopMargin>
+        <BottomMargin>1in</BottomMargin>
+        <Style />
+      </Page>
+    </ReportSection>
+  </ReportSections>
+  <ReportParameters>
+    <ReportParameter Name="FacObjName">
+      <DataType>String</DataType>
+      <Prompt>FacObjName</Prompt>
+      <ValidValues>
+        <DataSetReference>
+          <DataSetName>FacObj</DataSetName>
+          <ValueField>ID_TYPE</ValueField>
+          <LabelField>Station</LabelField>
+        </DataSetReference>
+      </ValidValues>
+    </ReportParameter>
+    <ReportParameter Name="SearchType">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>Runs</Value>
+        </Values>
+      </DefaultValue>
+      <Prompt>Search Type</Prompt>
+      <ValidValues>
+        <ParameterValues>
+          <ParameterValue>
+            <Value>Runs</Value>
+            <Label>Runs</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>Batch</Value>
+            <Label>Batch</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>TimeRange</Value>
+            <Label>TimeRange</Label>
+          </ParameterValue>
+        </ParameterValues>
+      </ValidValues>
+      <UsedInQuery>True</UsedInQuery>
+    </ReportParameter>
+    <ReportParameter Name="NumRuns">
+      <DataType>Integer</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>100</Value>
+        </Values>
+      </DefaultValue>
+      <Prompt>Number of Runs</Prompt>
+    </ReportParameter>
+    <ReportParameter Name="Batch">
+      <DataType>String</DataType>
+      <AllowBlank>true</AllowBlank>
+      <Prompt>Batch Number</Prompt>
+    </ReportParameter>
+    <ReportParameter Name="BeginDT">
+      <DataType>DateTime</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>=Switch(Datepart("h",Now())&lt;6, DateAdd("h",-2,DateValue(Now())),Datepart("h",Now())&lt;14,DateAdd("h",6,DateValue(Now())),Datepart("h",Now())&lt;22,DateAdd("h",14,DateValue(Now())),Datepart("h",Now())&lt;=24,DateAdd("h",22,DateValue(Now())))</Value>
+        </Values>
+      </DefaultValue>
+      <Prompt>BeginDT</Prompt>
+    </ReportParameter>
+    <ReportParameter Name="EndDT">
+      <DataType>DateTime</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>=Now()</Value>
+        </Values>
+      </DefaultValue>
+      <Prompt>EndDT</Prompt>
+    </ReportParameter>
+    <ReportParameter Name="RunParamNames">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <DataSetReference>
+          <DataSetName>RunParamTypes</DataSetName>
+          <ValueField>RunParamName</ValueField>
+        </DataSetReference>
+      </DefaultValue>
+      <AllowBlank>true</AllowBlank>
+      <Prompt>RunParamNames</Prompt>
+      <ValidValues>
+        <DataSetReference>
+          <DataSetName>RunParamTypes</DataSetName>
+          <ValueField>RunParamName</ValueField>
+          <LabelField>RunParamName</LabelField>
+        </DataSetReference>
+      </ValidValues>
+      <MultiValue>true</MultiValue>
+    </ReportParameter>
+  </ReportParameters>
+  <ReportParametersLayout>
+    <GridLayoutDefinition>
+      <NumberOfColumns>2</NumberOfColumns>
+      <NumberOfRows>4</NumberOfRows>
+      <CellDefinitions>
+        <CellDefinition>
+          <ColumnIndex>0</ColumnIndex>
+          <RowIndex>0</RowIndex>
+          <ParameterName>FacObjName</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>1</ColumnIndex>
+          <RowIndex>0</RowIndex>
+          <ParameterName>SearchType</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>0</ColumnIndex>
+          <RowIndex>1</RowIndex>
+          <ParameterName>NumRuns</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>1</ColumnIndex>
+          <RowIndex>1</RowIndex>
+          <ParameterName>Batch</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>0</ColumnIndex>
+          <RowIndex>2</RowIndex>
+          <ParameterName>BeginDT</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>1</ColumnIndex>
+          <RowIndex>2</RowIndex>
+          <ParameterName>EndDT</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>0</ColumnIndex>
+          <RowIndex>3</RowIndex>
+          <ParameterName>RunParamNames</ParameterName>
+        </CellDefinition>
+      </CellDefinitions>
+    </GridLayoutDefinition>
+  </ReportParametersLayout>
+  <rd:ReportUnitType>Inch</rd:ReportUnitType>
+  <rd:ReportServerUrl>http://mapengrpwp00001/ReportServer</rd:ReportServerUrl>
+  <rd:ReportID>92e3fbf4-a9db-4fd9-98ea-ae28c1fa1ed3</rd:ReportID>
+</Report>
