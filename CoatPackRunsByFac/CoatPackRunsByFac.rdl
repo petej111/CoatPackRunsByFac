@@ -17,10 +17,10 @@
     <DataSet Name="qGetProcessEntities">
       <Query>
         <DataSourceName>CoatPack_MDMS_RPT</DataSourceName>
-        <CommandText>-- get all unique process entity descriptions.
-select distinct pe.[Desc] 
-from CoatPack_MDMS_RPT.dbo.ProcessEntity pe</CommandText>
-        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
+        <CommandText>-- get all unique process entity descriptions in CPS.
+select distinct vPE.[Desc]
+from CoatPack_MDMS_RPT.dbo.vw_ProcessEntity as vPE
+</CommandText>
       </Query>
       <Fields>
         <Field Name="Desc">
@@ -37,21 +37,29 @@ from CoatPack_MDMS_RPT.dbo.ProcessEntity pe</CommandText>
             <Value>=Parameters!pProcessEntity.Value</Value>
           </QueryParameter>
         </QueryParameters>
-        <CommandText>-- generate results table containing all relevent process parameters for given
+        <CommandText>-- Following query generates results table containing all relevent process parameters for a given
 -- process entity name.
-select ppt.[Name]
-from CoatPack_MDMS_RPT.dbo.ProcParmType ppt
-inner join CoatPack_MDMS_RPT.dbo.CurrentProcessEntityType as cpet
-on cpet.ProcEntTypeRevID = ppt.ProcEntTypeRevID
-inner join CoatPack_MDMS_RPT.dbo.CurrentProcessEntity as cpe
-on cpe.ProcEntTypeID = cpet.ProcEntTypeID
-where cpe.[Desc] = @pProcessEntity
-order by ppt.[Name] asc</CommandText>
-        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
+
+select distinct tPPT.[Name], tCPE.[Desc]
+from CoatPack_MDMS_RPT.dbo.ProcParmType as tPPT
+
+	inner join CoatPack_MDMS_RPT.dbo.CurrentProcessEntityType as tCPET
+		on tCPET.ProcEntTypeRevID = tPPT.ProcEntTypeRevID
+
+	inner join CoatPack_MDMS_RPT.dbo.CurrentProcessEntity as tCPE
+		on tCPE.ProcEntTypeID = tCPET.ProcEntTypeID
+
+where tCPE.[Desc] = @pProcessEntity
+
+order by tPPT.[Name] asc</CommandText>
       </Query>
       <Fields>
         <Field Name="Name">
           <DataField>Name</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Desc">
+          <DataField>Desc</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
       </Fields>
@@ -59,47 +67,43 @@ order by ppt.[Name] asc</CommandText>
     <DataSet Name="qResults">
       <Query>
         <DataSourceName>CoatPack_MDMS_RPT</DataSourceName>
-        <CommandText>-- test
+        <CommandText>-- Given search type, one of three queries are run.
 
-</CommandText>
+if (@pQueryType = 'RUNS')
+	-- Query #1; returns results table for number of previous runs specified by @pNumRuns.
+	begin 
+		select top (@pNumRuns) tPE.[Desc] --vpe.[Name]
+		from CoatPack_MDMS_RPT.dbo.ProcessEntity as tPE
+
+		-- TODO
+	end
+else if (@pQueryType = 'BATCH_NUMBER')
+	-- Query #2; returns results table filtered by batch number specified by @pBatch.
+	begin
+		select tPE.[Desc]
+		from CoatPack_MDMS_RPT.dbo.ProcessEntity as tPE
+		-- TODO
+	end
+else if (@pQueryType = 'DATE_RANGE')
+	-- Query #3; returns results table filtered by date where @pStartTime &lt;= date &lt;= @pEndTime.
+	begin
+		select tPE.[Desc]
+		from CoatPack_MDMS_RPT.dbo.ProcessEntity as tPE
+		-- TODO
+	end</CommandText>
       </Query>
+      <Fields>
+        <Field Name="Desc">
+          <DataField>Desc</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+      </Fields>
     </DataSet>
   </DataSets>
   <ReportSections>
     <ReportSection>
       <Body>
         <ReportItems>
-          <Textbox Name="ReportTitle">
-            <CanGrow>true</CanGrow>
-            <KeepTogether>true</KeepTogether>
-            <Paragraphs>
-              <Paragraph>
-                <TextRuns>
-                  <TextRun>
-                    <Value>CoatPackRunsByFac</Value>
-                    <Style>
-                      <FontFamily>Segoe UI Light</FontFamily>
-                      <FontSize>28pt</FontSize>
-                    </Style>
-                  </TextRun>
-                </TextRuns>
-                <Style />
-              </Paragraph>
-            </Paragraphs>
-            <rd:WatermarkTextbox>Title</rd:WatermarkTextbox>
-            <rd:DefaultName>ReportTitle</rd:DefaultName>
-            <Height>0.5in</Height>
-            <Width>5.5in</Width>
-            <Style>
-              <Border>
-                <Style>None</Style>
-              </Border>
-              <PaddingLeft>2pt</PaddingLeft>
-              <PaddingRight>2pt</PaddingRight>
-              <PaddingTop>2pt</PaddingTop>
-              <PaddingBottom>2pt</PaddingBottom>
-            </Style>
-          </Textbox>
           <Tablix Name="Tablix1">
             <TablixBody>
               <TablixColumns>
@@ -324,11 +328,8 @@ order by ppt.[Name] asc</CommandText>
               </TablixMembers>
             </TablixRowHierarchy>
             <DataSetName>qResults</DataSetName>
-            <Top>0.655in</Top>
-            <Left>0.18625in</Left>
             <Height>0.5in</Height>
             <Width>3in</Width>
-            <ZIndex>1</ZIndex>
             <Style>
               <Border>
                 <Style>None</Style>
@@ -345,16 +346,6 @@ order by ppt.[Name] asc</CommandText>
       </Body>
       <Width>9.87375in</Width>
       <Page>
-        <PageFooter>
-          <Height>1.96042in</Height>
-          <PrintOnFirstPage>true</PrintOnFirstPage>
-          <PrintOnLastPage>true</PrintOnLastPage>
-          <Style>
-            <Border>
-              <Style>None</Style>
-            </Border>
-          </Style>
-        </PageFooter>
         <LeftMargin>1in</LeftMargin>
         <RightMargin>1in</RightMargin>
         <TopMargin>1in</TopMargin>
@@ -371,7 +362,7 @@ order by ppt.[Name] asc</CommandText>
           <Value>SEARCH_BY_RUNS</Value>
         </Values>
       </DefaultValue>
-      <Prompt>Search by:</Prompt>
+      <Prompt>Search Type:</Prompt>
       <ValidValues>
         <ParameterValues>
           <ParameterValue>

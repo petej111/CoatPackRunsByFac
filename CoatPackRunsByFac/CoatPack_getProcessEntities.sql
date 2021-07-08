@@ -1,6 +1,8 @@
--- get all unique process entity descriptions.
-select distinct vpe.[Name], vpe.[Desc]
--- from CoatPack_MDMS_RPT.dbo.CurrentProcessEntity pe
-from CoatPack_MDMS_RPT.dbo.vw_ProcessEntity vpe
-where vpe.[Name] not in (select distinct tpe.[Name]
-						 from CoatPack_MDMS_RPT.dbo.CurrentProcessEntity tpe)
+-- get all unique process entity descriptions in CPS.
+
+-- TODO:
+--    - categorize each process entity into a "family"
+--    - other databases besides 'CoatPack_MDMS_RPT' for process entities?
+
+select distinct vPE.[Desc]
+from CoatPack_MDMS_RPT.dbo.vw_ProcessEntity as vPE

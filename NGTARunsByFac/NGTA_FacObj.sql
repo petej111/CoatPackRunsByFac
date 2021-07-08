@@ -1,7 +1,10 @@
+-- only changes that have been committed are read; prevents "dirty reads" or results that 
+-- cannot be reproduced; this is the default for SSMS.
 SET TRANSACTION	ISOLATION LEVEL READ COMMITTED 
 
 -- OBJECT_ID returns the database object identification number of a schema-scoped object
 IF OBJECT_ID('tempdb..#t1') IS NOT NULL
+
 	-- 'Drop Table' deletes the table in the specified database and results in complete loss
 	-- of all information stored in the table.
     DROP TABLE #t1;

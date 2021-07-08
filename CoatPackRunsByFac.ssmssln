@@ -6,12 +6,8 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{4F2E2C19-372F-40D8-9FA7-9D2138C6997A}") = "CoatPackRunsByFac", "CoatPackRunsByFac\CoatPackRunsByFac.ssmssqlproj", "{5FC69D59-8C88-4C0D-84C5-8BC8C19EBC0D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{AF294B08-44A0-4986-AFB9-B8F8CC18D0FC}"
-	ProjectSection(SolutionItems) = preProject
-		CoatPackRunsByFac\CoatPack_getProcessEntities.sql = CoatPackRunsByFac\CoatPack_getProcessEntities.sql
-		CoatPackRunsByFac\CoatPack_getProcessParams.sql = CoatPackRunsByFac\CoatPack_getProcessParams.sql
-		CoatPackRunsByFac\CoatPack_getResults.sql = CoatPackRunsByFac\CoatPack_getResults.sql
-		CoatPackRunsByFac\test.sql = CoatPackRunsByFac\test.sql
-	EndProjectSection
+EndProject
+Project("{4F2E2C19-372F-40D8-9FA7-9D2138C6997A}") = "NGTARunsByFac", "NGTARunsByFac\NGTARunsByFac.ssmssqlproj", "{41128688-1BA7-4B85-9355-B4559D9D9DBD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,7 +15,8 @@ Global
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{5FC69D59-8C88-4C0D-84C5-8BC8C19EBC0D}.Default|Default.ActiveCfg = Default
-		{59506676-EBD8-465F-8926-C791A4E5E892}.Default|Default.ActiveCfg = Default
+		{B82E8C26-C4DC-4C64-814E-C7ADF10414E1}.Default|Default.ActiveCfg = Default
+		{41128688-1BA7-4B85-9355-B4559D9D9DBD}.Default|Default.ActiveCfg = Default
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
