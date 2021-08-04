@@ -5,25 +5,25 @@ use CoatPack_MDMS_RPT
 -- Given search type, one of three queries are run.
 
 -- vvv Debugging; remove in report builder vvv
-declare @pQueryType as varchar(max)
+declare @pSearchType as varchar(max)
 declare @pNumRuns as int
 declare @pProcessEntity as varchar(max)
 declare @pBatch as varchar(max)
 declare @pStartTime as date
 declare @pEndTime as date
 
-set @pQueryType = 'BATCH_NUMBER'
-set @pNumRuns = 10
-set @pProcessEntity = 'Clean And Coat'
+set @pSearchType = 'SEARCH_BY_RUNS'
+set @pNumRuns = 100
+set @pProcessEntity = 'Tip Reflow 01'
 set @pBatch = '27592622'
 set @pStartTime = '2021-07-06'
 set @pEndTime = '2021-07-07'
 -- ^^^ Debugging; remove in report builder ^^^
 
-if (@pQueryType = 'RUNS')
-	-- returns results table for number of previous runs specified by @pNumRuns.
+if (@pSearchType = 'SEARCH_BY_RUNS')
 	begin 
-		select top (@pNumRuns) vPE.[Desc] as [Process Entity],
+		-- returns results table for number of previous runs specified by @pNumRuns.
+		select top (cast(@pNumRuns as int)) vPE.[Desc] as [Process Entity],
 			vR.runID as [Run ID],
 			vR.Batch,
 			vR.Matl as [Material],
@@ -41,9 +41,9 @@ if (@pQueryType = 'RUNS')
 			--and vRPD.RunParamName in (@pProcessParams)
 		order by vR.RunID desc
 	end
-else if (@pQueryType = 'BATCH_NUMBER')
-	-- returns results table filtered by batch number specified by @pBatch.
+else if (@pSearchType = 'SEARCH_BY_BATCH_NUMBER')
 	begin
+		-- returns results table filtered by batch number specified by @pBatch.
 		select vPE.[Desc] as [Process Entity],
 			vR.runID as [Run ID],
 			vR.Batch,
@@ -63,9 +63,9 @@ else if (@pQueryType = 'BATCH_NUMBER')
 			and vR.Batch = @pBatch
 		order by vR.RunID desc
 	end
-else if (@pQueryType = 'DATE_RANGE')
-	-- returns results table filtered by date where @pStartTime <= date <= @pEndTime.
+else if (@pSearchType = 'SEARCH_BY_DATE_RANGE')
 	begin
+		-- returns results table filtered by date where @pStartTime <= date <= @pEndTime.
 		select vPE.[Desc] as [Process Entity],
 			vR.runID as [Run ID],
 			vR.Batch,

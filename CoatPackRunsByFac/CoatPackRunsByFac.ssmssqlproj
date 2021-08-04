@@ -37,17 +37,17 @@
           <AssociatedConnUserName />
           <FullPath>CoatPack_getResults.sql</FullPath>
         </FileNode>
+        <FileNode Name="qProcessEntities_Params.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:MAPHPCRPP01\PROD:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>MAPHPCRPP01\PROD</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>qProcessEntities_Params.sql</FullPath>
+        </FileNode>
         <FileNode Name="SQLQuery1.sql">
           <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:MAPHPCRPP01\PROD:True</AssociatedConnectionMoniker>
           <AssociatedConnSrvName>MAPHPCRPP01\PROD</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>SQLQuery1.sql</FullPath>
-        </FileNode>
-        <FileNode Name="SQLQuery2.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:MAPHPCRPP01\PROD:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>MAPHPCRPP01\PROD</AssociatedConnSrvName>
-          <AssociatedConnUserName />
-          <FullPath>SQLQuery2.sql</FullPath>
         </FileNode>
         <FileNode Name="test.sql">
           <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:MAPHPCRPP01\PROD:True</AssociatedConnectionMoniker>

@@ -19,8 +19,7 @@
         <DataSourceName>CoatPack_MDMS_RPT</DataSourceName>
         <CommandText>-- get all unique process entity descriptions in CPS.
 select distinct vPE.[Desc]
-from CoatPack_MDMS_RPT.dbo.vw_ProcessEntity as vPE
-</CommandText>
+from CoatPack_MDMS_RPT.dbo.vw_ProcessEntity as vPE</CommandText>
       </Query>
       <Fields>
         <Field Name="Desc">
@@ -67,32 +66,42 @@ order by tPPT.[Name] asc</CommandText>
     <DataSet Name="qResults">
       <Query>
         <DataSourceName>CoatPack_MDMS_RPT</DataSourceName>
+        <QueryParameters>
+          <QueryParameter Name="@pBatch">
+            <Value>=Parameters!pBatch.Value</Value>
+            <rd:UserDefined>true</rd:UserDefined>
+          </QueryParameter>
+          <QueryParameter Name="@pStartTime">
+            <Value>=Parameters!pStartTime.Value</Value>
+            <rd:UserDefined>true</rd:UserDefined>
+          </QueryParameter>
+          <QueryParameter Name="@pEndTime">
+            <Value>=Parameters!pEndTime.Value</Value>
+            <rd:UserDefined>true</rd:UserDefined>
+          </QueryParameter>
+          <QueryParameter Name="@pNumRuns">
+            <Value>=Parameters!pNumRuns.Value</Value>
+            <rd:UserDefined>true</rd:UserDefined>
+          </QueryParameter>
+          <QueryParameter Name="@pProcessEntity">
+            <Value>=Parameters!pProcessEntity.Value</Value>
+            <rd:UserDefined>true</rd:UserDefined>
+          </QueryParameter>
+          <QueryParameter Name="@pSearchType">
+            <Value>=Parameters!pSearchType.Value</Value>
+            <rd:UserDefined>true</rd:UserDefined>
+          </QueryParameter>
+        </QueryParameters>
         <CommandText>set transaction isolation level read committed
 
 use CoatPack_MDMS_RPT
 
 -- Given search type, one of three queries are run.
 
--- vvv Debugging; remove in report builder vvv
-declare @pQueryType as varchar(max)
-declare @pNumRuns as int
-declare @pProcessEntity as varchar(max)
-declare @pBatch as varchar(max)
-declare @pStartTime as date
-declare @pEndTime as date
-
-set @pQueryType = 'BATCH_NUMBER'
-set @pNumRuns = 10
-set @pProcessEntity = 'Clean And Coat'
-set @pBatch = '27592622'
-set @pStartTime = '2021-07-06'
-set @pEndTime = '2021-07-07'
--- ^^^ Debugging; remove in report builder ^^^
-
-if (@pQueryType = 'RUNS')
-	-- returns results table for number of previous runs specified by @pNumRuns.
+if (@pSearchType = 'SEARCH_BY_RUNS')
 	begin 
-		select top (@pNumRuns) vPE.[Desc] as [Process Entity],
+		-- returns results table for number of previous runs specified by @pNumRuns.
+		select top (cast(@pNumRuns as int)) vPE.[Desc] as [Process Entity],
 			vR.runID as [Run ID],
 			vR.Batch,
 			vR.Matl as [Material],
@@ -110,9 +119,9 @@ if (@pQueryType = 'RUNS')
 			--and vRPD.RunParamName in (@pProcessParams)
 		order by vR.RunID desc
 	end
-else if (@pQueryType = 'BATCH_NUMBER')
-	-- returns results table filtered by batch number specified by @pBatch.
+else if (@pSearchType = 'SEARCH_BY_BATCH_NUMBER')
 	begin
+		-- returns results table filtered by batch number specified by @pBatch.
 		select vPE.[Desc] as [Process Entity],
 			vR.runID as [Run ID],
 			vR.Batch,
@@ -132,9 +141,9 @@ else if (@pQueryType = 'BATCH_NUMBER')
 			and vR.Batch = @pBatch
 		order by vR.RunID desc
 	end
-else if (@pQueryType = 'DATE_RANGE')
-	-- returns results table filtered by date where @pStartTime &lt;= date &lt;= @pEndTime.
+else if (@pSearchType = 'SEARCH_BY_DATE_RANGE')
 	begin
+		-- returns results table filtered by date where @pStartTime &lt;= date &lt;= @pEndTime.
 		select vPE.[Desc] as [Process Entity],
 			vR.runID as [Run ID],
 			vR.Batch,
@@ -200,7 +209,7 @@ else if (@pQueryType = 'DATE_RANGE')
             <TablixBody>
               <TablixColumns>
                 <TablixColumn>
-                  <Width>1in</Width>
+                  <Width>1.5in</Width>
                 </TablixColumn>
                 <TablixColumn>
                   <Width>1in</Width>
@@ -218,7 +227,7 @@ else if (@pQueryType = 'DATE_RANGE')
                   <Width>1in</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1in</Width>
+                  <Width>1.28125in</Width>
                 </TablixColumn>
               </TablixColumns>
               <TablixRows>
@@ -227,7 +236,7 @@ else if (@pQueryType = 'DATE_RANGE')
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="Textbox20">
+                        <Textbox Name="Textbox1">
                           <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
@@ -235,13 +244,15 @@ else if (@pQueryType = 'DATE_RANGE')
                               <TextRuns>
                                 <TextRun>
                                   <Value>Process Entity</Value>
-                                  <Style />
+                                  <Style>
+                                    <FontFamily>Arial</FontFamily>
+                                  </Style>
                                 </TextRun>
                               </TextRuns>
                               <Style />
                             </Paragraph>
                           </Paragraphs>
-                          <rd:DefaultName>Textbox20</rd:DefaultName>
+                          <rd:DefaultName>Textbox1</rd:DefaultName>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -257,7 +268,7 @@ else if (@pQueryType = 'DATE_RANGE')
                     </TablixCell>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="Textbox22">
+                        <Textbox Name="Textbox3">
                           <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
@@ -265,13 +276,15 @@ else if (@pQueryType = 'DATE_RANGE')
                               <TextRuns>
                                 <TextRun>
                                   <Value>Run ID</Value>
-                                  <Style />
+                                  <Style>
+                                    <FontFamily>Arial</FontFamily>
+                                  </Style>
                                 </TextRun>
                               </TextRuns>
                               <Style />
                             </Paragraph>
                           </Paragraphs>
-                          <rd:DefaultName>Textbox22</rd:DefaultName>
+                          <rd:DefaultName>Textbox3</rd:DefaultName>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -287,7 +300,7 @@ else if (@pQueryType = 'DATE_RANGE')
                     </TablixCell>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="Textbox24">
+                        <Textbox Name="Textbox5">
                           <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
@@ -295,13 +308,15 @@ else if (@pQueryType = 'DATE_RANGE')
                               <TextRuns>
                                 <TextRun>
                                   <Value>Batch</Value>
-                                  <Style />
+                                  <Style>
+                                    <FontFamily>Arial</FontFamily>
+                                  </Style>
                                 </TextRun>
                               </TextRuns>
                               <Style />
                             </Paragraph>
                           </Paragraphs>
-                          <rd:DefaultName>Textbox24</rd:DefaultName>
+                          <rd:DefaultName>Textbox5</rd:DefaultName>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -317,7 +332,7 @@ else if (@pQueryType = 'DATE_RANGE')
                     </TablixCell>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="Textbox26">
+                        <Textbox Name="Textbox14">
                           <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
@@ -333,7 +348,7 @@ else if (@pQueryType = 'DATE_RANGE')
                               <Style />
                             </Paragraph>
                           </Paragraphs>
-                          <rd:DefaultName>Textbox26</rd:DefaultName>
+                          <rd:DefaultName>Textbox14</rd:DefaultName>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -349,7 +364,7 @@ else if (@pQueryType = 'DATE_RANGE')
                     </TablixCell>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="Textbox28">
+                        <Textbox Name="Textbox16">
                           <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
@@ -365,7 +380,7 @@ else if (@pQueryType = 'DATE_RANGE')
                               <Style />
                             </Paragraph>
                           </Paragraphs>
-                          <rd:DefaultName>Textbox28</rd:DefaultName>
+                          <rd:DefaultName>Textbox16</rd:DefaultName>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -381,7 +396,7 @@ else if (@pQueryType = 'DATE_RANGE')
                     </TablixCell>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="Textbox30">
+                        <Textbox Name="Textbox18">
                           <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
@@ -397,7 +412,7 @@ else if (@pQueryType = 'DATE_RANGE')
                               <Style />
                             </Paragraph>
                           </Paragraphs>
-                          <rd:DefaultName>Textbox30</rd:DefaultName>
+                          <rd:DefaultName>Textbox18</rd:DefaultName>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -413,7 +428,7 @@ else if (@pQueryType = 'DATE_RANGE')
                     </TablixCell>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="Textbox48">
+                        <Textbox Name="Textbox12">
                           <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
@@ -429,7 +444,7 @@ else if (@pQueryType = 'DATE_RANGE')
                               <Style />
                             </Paragraph>
                           </Paragraphs>
-                          <rd:DefaultName>Textbox48</rd:DefaultName>
+                          <rd:DefaultName>Textbox12</rd:DefaultName>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -458,7 +473,9 @@ else if (@pQueryType = 'DATE_RANGE')
                               <TextRuns>
                                 <TextRun>
                                   <Value>=Fields!Process_Entity.Value</Value>
-                                  <Style />
+                                  <Style>
+                                    <FontFamily>Arial</FontFamily>
+                                  </Style>
                                 </TextRun>
                               </TextRuns>
                               <Style />
@@ -488,7 +505,9 @@ else if (@pQueryType = 'DATE_RANGE')
                               <TextRuns>
                                 <TextRun>
                                   <Value>=Fields!Run_ID.Value</Value>
-                                  <Style />
+                                  <Style>
+                                    <FontFamily>Arial</FontFamily>
+                                  </Style>
                                 </TextRun>
                               </TextRuns>
                               <Style />
@@ -518,7 +537,9 @@ else if (@pQueryType = 'DATE_RANGE')
                               <TextRuns>
                                 <TextRun>
                                   <Value>=Fields!Batch.Value</Value>
-                                  <Style />
+                                  <Style>
+                                    <FontFamily>Arial</FontFamily>
+                                  </Style>
                                 </TextRun>
                               </TextRuns>
                               <Style />
@@ -636,7 +657,7 @@ else if (@pQueryType = 'DATE_RANGE')
                     </TablixCell>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="Param_Value1">
+                        <Textbox Name="Param_Value">
                           <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
@@ -652,7 +673,7 @@ else if (@pQueryType = 'DATE_RANGE')
                               <Style />
                             </Paragraph>
                           </Paragraphs>
-                          <rd:DefaultName>Param_Value1</rd:DefaultName>
+                          <rd:DefaultName>Param_Value</rd:DefaultName>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -694,19 +715,27 @@ else if (@pQueryType = 'DATE_RANGE')
             </TablixColumnHierarchy>
             <TablixRowHierarchy>
               <TablixMembers>
-                <TablixMember />
+                <TablixMember>
+                  <KeepWithGroup>After</KeepWithGroup>
+                </TablixMember>
                 <TablixMember>
                   <Group Name="Run_ID">
                     <GroupExpressions>
                       <GroupExpression>=Fields!Run_ID.Value</GroupExpression>
                     </GroupExpressions>
                   </Group>
+                  <SortExpressions>
+                    <SortExpression>
+                      <Value>=Fields!Run_ID.Value</Value>
+                    </SortExpression>
+                  </SortExpressions>
                 </TablixMember>
               </TablixMembers>
             </TablixRowHierarchy>
             <DataSetName>qResults</DataSetName>
+            <Top>0.31125in</Top>
             <Height>0.5in</Height>
-            <Width>7in</Width>
+            <Width>7.78125in</Width>
             <Style>
               <Border>
                 <Style>None</Style>
